@@ -3,12 +3,14 @@
 # Python libs
 import sys, time
 
+import time
+
 # numpy and scipy
 import numpy as np
 from scipy.ndimage import filters
 
 # OpenCV
-import cv2
+from cv2 import cv2
 
 # Image processing
 import matplotlib.pyplot as plt
@@ -19,14 +21,17 @@ import roslib
 import rospy
 
 # Ros Messages
-from sensor_msgs.msg import CompressedImage
-from std_msgs.msg import Float32
+from sensor_msgs.msg import Image
+from std_msgs.msg import Float32MultiArray
+
+#  To convert ros images to cv images 
+from cv_bridge import CvBridge
 
 
 # _____________________________________________________________________
 
 # Global variables
-VERBOSE=False
+VERBOSE=True
 DISPLAY=True
 
 # _____________________________________________________________________
@@ -39,12 +44,14 @@ class image_feature:
         # topic where we publish
         #self.image_pub = rospy.Publisher("/output/image_raw/compressed",
         #    CompressedImage, queue_size=1)
-        self.redX_pub = rospy.Publisher("redX", Float32, queue_size=1)
-        self.redY_pub = rospy.Publisher("redY", Float32, queue_size=1)
-
+        self.redCoord_pub = rospy.Publisher("redCoord", Float32MultiArray, queue_size=1)
+        # self.redY_pub = rospy.Publisher("redY", Float32, queue_size=1)
+        
+        # init the ros bridge
+        self.bridge = CvBridge()
         # subscribed Topic
         self.subscriber = rospy.Subscriber("/camera/color/image_raw",
-            CompressedImage, self.callback,  queue_size = 1)
+            Image, self.callback,  queue_size = 1)
         if VERBOSE :
             print("subscribed to /camera/color/image_raw")
 
@@ -59,19 +66,46 @@ class image_feature:
     def callback(self, ros_data):
         '''Callback function of subscribed topic. 
         Here images get converted and features detected'''
-        if VERBOSE :
-            print('received image of type: "%s"' % ros_data.format)
-        np_arr = np.fromstring(ros_data.data, np.uint8)
+        # if VERBOSE :
+        #     # print('received image of type: "%s"' % ros_data.encoding)
+        
+        time.sleep(2)
+
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(ros_data, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+
+
+        # img_str = cv2.imencode('.jpg', ros_data.data)[1] #Encodes and stores in buffer
+        # print(img_str)
+        #  np_arr = np.frombuffer(img_str, np.uint8)
+
+        # np_arr = np.fromstring(cv_image, np.uint8)
+       
+        # print(np_arr)
         # Direct conversion to CV2
-        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR) # OpenCV >= 3.0:
+        # print("Cv2 ver: " + cv2.__version__)
+
+        # frame = cv2.imdecode(cv_image, cv2.IMREAD_COLOR) # OpenCV >= 3.0:
+        
+        frame = cv_image
+
+        # print(frame)
         # Get frame dimensions
         frame_height = frame.shape[0]
         frame_width = frame.shape[1]
         frame_channels = frame.shape[2]
+
+        #  Alternatively, the image msg already has these fields
+        if VERBOSE:
+            # print("\nCV2 decoded data is:\n H: " + str(frame_height) + "\tW: " + str(frame_width))
+            print("\nImage msg data is:  \n H: " + str(ros_data.height) + "\tW: " + str(ros_data.width))
+
         # Image processing
         res = self.red_filtering(frame)
         # Detect centrode
-        cX, cY, fullArea = self.detect_centrode(res)
+        (cX, cY, fullArea) = self.detect_centrode(res)
         # Write the point (cX,xY) on "res" image
         try:
             cv2.circle(res, (int(cX),int(cY)), 5, (255, 0, 0), -1)
@@ -81,14 +115,21 @@ class image_feature:
         # Normalizing w.r.t the center
         cX = int(cX-frame_width/2) 
         cY = int(cY-frame_height/2)
-        self.redX_pub.publish(cX)
-        self.area_pub.publish(int(fullArea))
 
-        # Print the center of mass coordinates w.r.t the center of image and diplay it
+        redData = (cX, cY, fullArea)
+
+        msg = Float32MultiArray()
+        msg.data = redData
+
+        self.redCoord_pub.publish(msg)
+        print("\n Published red data!\n")
+        
+        # Print the center of mass coordinates w.r.t the center of image and display it
         if VERBOSE:
-            print (cX, cY)
+            print("\nRed centrode is: (" + str(cX) + "," + str(cY) + ")")
+            print("\nRed area is: " + str(fullArea))
             cmd = self.extraction(cX)
-            print(cmd)
+            print("Command: " + str(cmd))
         # Display the result
         if DISPLAY:
             cv2.imshow('frame', frame)
@@ -123,7 +164,7 @@ class image_feature:
         # Adapted from 
         # https://stackoverflow.com/questions/54425093/
         # /how-can-i-find-the-center-of-the-pattern-and-the-distribution-of-a-color-around)
-        contours, hierarchy = cv2.findContours(res, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        im2, contours, hierarchy = cv2.findContours(res, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         areas = []
         centersX = []
         centersY = []
@@ -144,6 +185,7 @@ class image_feature:
         for i in range(len(areas)):
             acc_X += centersX[i] * (areas[i]/full_areas) 
             acc_Y += centersY[i] * (areas[i]/full_areas)
+
         return acc_X,acc_Y, full_areas
 
     
