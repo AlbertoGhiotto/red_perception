@@ -50,18 +50,18 @@ class image_feature:
         # init the ros bridge
         self.bridge = CvBridge()
         # subscribed Topic
-        self.subscriber = rospy.Subscriber("/camera/color/image_raw",
-            Image, self.callback,  queue_size = 1)
+        self.subscriber = rospy.Subscriber(
+            "/camera/color/image_raw", Image, self.callback,  queue_size=1)
         if VERBOSE :
             print("subscribed to /camera/color/image_raw")
 
         # define color ranges in HSV
-        self.lower_red = np.array([160, 140, 50])
-        self.upper_red = np.array([180, 255, 255])
-        self.lower_blue = np.array([110, 50, 50])
-        self.upper_blue = np.array([130, 255, 255])
-        self.lower_green = np.array([45, 140, 50])
-        self.upper_green = np.array([75, 255, 255])
+        self.lower_red = np.array([0, 120, 50])
+        self.upper_red = np.array([10, 255, 255])
+        # self.lower_blue = np.array([110, 50, 50])
+        # self.upper_blue = np.array([130, 255, 255])
+        # self.lower_green = np.array([45, 140, 50])
+        # self.upper_green = np.array([75, 255, 255])
 
     def callback(self, ros_data):
         '''Callback function of subscribed topic. 
@@ -69,13 +69,12 @@ class image_feature:
         # if VERBOSE :
         #     # print('received image of type: "%s"' % ros_data.encoding)
         
-        time.sleep(2)
+        time.sleep(1)
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(ros_data, "bgr8")
         except CvBridgeError as e:
             print(e)
-
 
         # img_str = cv2.imencode('.jpg', ros_data.data)[1] #Encodes and stores in buffer
         # print(img_str)
@@ -98,9 +97,9 @@ class image_feature:
         frame_channels = frame.shape[2]
 
         #  Alternatively, the image msg already has these fields
-        if VERBOSE:
-            # print("\nCV2 decoded data is:\n H: " + str(frame_height) + "\tW: " + str(frame_width))
-            print("\nImage msg data is:  \n H: " + str(ros_data.height) + "\tW: " + str(ros_data.width))
+        # if VERBOSE:
+        #     # print("\nCV2 decoded data is:\n H: " + str(frame_height) + "\tW: " + str(frame_width))
+        #     print("\nImage msg data is:  \nH: " + str(ros_data.height) + "\tW: " + str(ros_data.width))
 
         # Image processing
         res = self.red_filtering(frame)
@@ -118,18 +117,20 @@ class image_feature:
 
         redData = (cX, cY, fullArea)
 
+
         msg = Float32MultiArray()
         msg.data = redData
 
         self.redCoord_pub.publish(msg)
-        print("\n Published red data!\n")
+        print("\nPublished red data on \\redCoord!\n")
         
         # Print the center of mass coordinates w.r.t the center of image and display it
         if VERBOSE:
-            print("\nRed centrode is: (" + str(cX) + "," + str(cY) + ")")
-            print("\nRed area is: " + str(fullArea))
+            print("Red centrode is: (" + str(cX) + "," + str(cY) + ")")
+            print("Red area is: " + str(fullArea))
             cmd = self.extraction(cX)
             print("Command: " + str(cmd))
+            print("__________")
         # Display the result
         if DISPLAY:
             cv2.imshow('frame', frame)
