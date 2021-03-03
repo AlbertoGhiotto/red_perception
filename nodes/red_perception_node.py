@@ -69,7 +69,7 @@ class image_feature:
         # if VERBOSE :
         #     # print('received image of type: "%s"' % ros_data.encoding)
         
-        time.sleep(1)
+        time.sleep(0.25)
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(ros_data, "bgr8")
@@ -115,21 +115,30 @@ class image_feature:
         cX = int(cX-frame_width/2) 
         cY = int(cY-frame_height/2)
 
-        redData = (cX, cY, fullArea)
+        # flag signaling if centroid is found
+        found = False 
 
+        if ((cX != -frame_width/2) and (cY != -frame_height/2)): # centroid is found
+            found = True
+
+        redData = (cX, cY, fullArea, found)
 
         msg = Float32MultiArray()
         msg.data = redData
 
         self.redCoord_pub.publish(msg)
-        print("\nPublished red data on \\redCoord!\n")
-        
+        print("\nPublished red data on /redCoord!\n")
+
+        cmd = self.decideCommand(cX, cY, fullArea)
+
         # Print the center of mass coordinates w.r.t the center of image and display it
         if VERBOSE:
-            print("Red centrode is: (" + str(cX) + "," + str(cY) + ")")
-            print("Red area is: " + str(fullArea))
-            cmd = self.extraction(cX)
-            print("Command: " + str(cmd))
+            if (found):
+                print("Red centrode is: (" + str(cX) + "," + str(cY) + ")")
+                print("Red area is: " + str(fullArea))
+                print("Command: " + str(cmd))
+            else:
+                print("Red is not found!\n\n")
             print("__________")
         # Display the result
         if DISPLAY:
@@ -190,7 +199,7 @@ class image_feature:
         return acc_X,acc_Y, full_areas
 
     
-    def extraction(self, cX):
+    def decideCommand(self, cX, cY, area):
         #  cX  >    0 -> ball on the right
         #  cX  >  100 -> ball on the FAR right
         #  cX  <    0 -> ball on the left
