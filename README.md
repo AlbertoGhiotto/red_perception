@@ -1,5 +1,5 @@
 ![ROS Distro](https://img.shields.io/badge/ROS-Melodic-Green)
-![python](https://img.shields.io/badge/Python-Passing-blue)
+![python](https://img.shields.io/badge/Python-2.7.17-blue)
 ![cv2](https://img.shields.io/badge/OpenCV-3.4.6.27-lightgrey)
 
 
