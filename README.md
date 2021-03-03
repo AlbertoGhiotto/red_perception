@@ -15,3 +15,9 @@ Install OpenCV in python 2 for ROS compatibility
 
 Install numpy, matplotlib, cv_bridge and the other dependencies.
 
+
+## Running 
+
+Run the script with
+
+``` rosrun robot_perception red_perception_node.py ```
