@@ -125,17 +125,17 @@ class image_feature:
         if ((cX != 0) and (cY != 0)): # centroid is found
             found = True
 
-        redData = (cX, cY, fullArea, found)
+        center = (frame_width / 2  , frame_height /2 )
+
+        cmd = self.decideCommand(cX, cY, fullArea, center)
+
+        redData = (cmd, fullArea, found)    # publish command, red area and whether centrode is found
 
         msg = Float32MultiArray()
         msg.data = redData
 
         self.redCoord_pub.publish(msg)
         print("\nPublished red data on /redCoord!\n")
-
-        center = (frame_width / 2  , frame_height /2 )
-
-        cmd = self.decideCommand(cX, cY, fullArea, center)
 
         # Print the center of mass coordinates w.r.t the center of image and display it
         if VERBOSE:
