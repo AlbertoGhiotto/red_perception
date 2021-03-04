@@ -27,6 +27,9 @@ from std_msgs.msg import Float32MultiArray
 #  To convert ros images to cv images 
 from cv_bridge import CvBridge
 
+# For arctan computation
+import math
+
 
 # _____________________________________________________________________
 
@@ -112,13 +115,14 @@ class image_feature:
             # E.g. cannot convert float NaN to integer
             pass
         # Normalizing w.r.t the center
-        cX = int(cX-frame_width/2) 
-        cY = int(cY-frame_height/2)
+        # cX = int(cX-frame_width/2) 
+        # cY = int(cY-frame_height/2)
 
         # flag signaling if centroid is found
         found = False 
 
-        if ((cX != -frame_width/2) and (cY != -frame_height/2)): # centroid is found
+        # if ((cX != -frame_width/2) and (cY != -frame_height/2)): # centroid is found
+        if ((cX != 0) and (cY != 0)): # centroid is found
             found = True
 
         redData = (cX, cY, fullArea, found)
@@ -129,7 +133,9 @@ class image_feature:
         self.redCoord_pub.publish(msg)
         print("\nPublished red data on /redCoord!\n")
 
-        cmd = self.decideCommand(cX, cY, fullArea)
+        center = (frame_width / 2  , frame_height /2 )
+
+        cmd = self.decideCommand(cX, cY, fullArea, center)
 
         # Print the center of mass coordinates w.r.t the center of image and display it
         if VERBOSE:
@@ -199,23 +205,38 @@ class image_feature:
         return acc_X,acc_Y, full_areas
 
     
-    def decideCommand(self, cX, cY, area):
-        #  cX  >    0 -> ball on the right
-        #  cX  >  100 -> ball on the FAR right
-        #  cX  <    0 -> ball on the left
-        #  cX  < -100 -> ball on the FAR right
-        # -100<cX<100 -> ball ok
+    def decideCommand(self, cX, cY, area, center):
+        # dictionary :
+        # 0:A ok!Go Ahead
+        # 1:R centrode is on right
+        # 2:L centrode is on left
+        # 3:U centrode is up  
+        # 4:D centrode is down
+        # 5:ERR error
+        
+        m = (cY - center[1]) / (cX - center[0])   # angular coefficient of line from origin to centrode
+        # print("M is: " + str(m))
+        angle =  math.atan(m)        
+        print("Angle is: " + str(round(angle,2)) + " RAD | " + str(np.rad2deg(round(angle,2))) + " GRAD")
 
-        if abs(cX) < 190:
-            if cX >  80:
-                return 'R'
-            elif cX < -100: 
-                return 'L'
-            else:
-                return True    
+        if( 280 < cX < 360 and 200 < cY < 280 ): # centrode is centered
+            return 0
+        elif( cX < center[0] ):    # Left side
+            if(-math.pi / 4 < angle <  math.pi / 4):
+                return 2 #LEFT
+            elif(angle < - math.pi / 4):
+                return 4 #DOWN
+            elif(angle > math.pi / 4):
+                return 3 #UP
+        elif( cX >= center[0]):    # Right side
+            if(-math.pi / 4 < angle <  math.pi / 4):
+                return 1 #RIGHT
+            elif(angle < - math.pi / 4):
+                return 3 #UP    Inverted wrt left side
+            elif(angle > math.pi / 4):  
+                return 4 #DOWN
         else:
-            return False 
-
+            return 5
 
 
 
