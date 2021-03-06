@@ -148,8 +148,12 @@ class image_feature:
             print("__________")
         # Display the result
         if DISPLAY:
-            cv2.imshow('frame', frame)
-            cv2.imshow("res_center",res)
+            imS = cv2.resize(frame, (240, 240))                    # Resize image for displaying
+            cv2.imshow("output", imS)                              # Show image
+            imS = cv2.resize(res, (240, 240))                    # Resize image for displaying
+            cv2.imshow("output", imS)                              # Show image
+            # cv2.imshow('frame', frame)
+            # cv2.imshow("res_center",res)
             cv2.waitKey(2)
 
 
@@ -219,7 +223,7 @@ class image_feature:
         angle =  math.atan(m)        
         print("Angle is: " + str(round(angle,2)) + " RAD | " + str(np.rad2deg(round(angle,2))) + " GRAD")
 
-        if( 280 < cX < 360 and 200 < cY < 280 ): # centrode is centered
+        if( 260 < cX < 380 and 180 < cY < 300 ): # centrode is centered
             return 0
         elif( cX < center[0] ):    # Left side
             if(-math.pi / 4 < angle <  math.pi / 4):
