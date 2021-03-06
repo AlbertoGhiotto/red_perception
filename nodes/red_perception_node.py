@@ -148,10 +148,10 @@ class image_feature:
             print("__________")
         # Display the result
         if DISPLAY:
-            imS = cv2.resize(frame, (240, 240))                    # Resize image for displaying
-            cv2.imshow("output", imS)                              # Show image
-            imS = cv2.resize(res, (240, 240))                    # Resize image for displaying
-            cv2.imshow("output", imS)                              # Show image
+            imSF = cv2.resize(frame, (240, 240))                    # Resize image for displaying
+            cv2.imshow("Frame", imSF)                              # Show image
+            imSR = cv2.resize(res, (240, 240))                    # Resize image for displaying
+            cv2.imshow("Centroid", imSR)                              # Show image
             # cv2.imshow('frame', frame)
             # cv2.imshow("res_center",res)
             cv2.waitKey(2)
