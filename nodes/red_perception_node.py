@@ -37,6 +37,8 @@ import math
 VERBOSE=True
 DISPLAY=True
 
+stringCommand = [ "Ahead", "Right", "Left", "Up", "Down"]
+
 # _____________________________________________________________________
 # "Callback class"
 
@@ -142,15 +144,15 @@ class image_feature:
             if (found):
                 print("Red centrode is: (" + str(cX) + "," + str(cY) + ")")
                 print("Red area is: " + str(fullArea))
-                print("Command: " + str(cmd))
+                print("Command: " + stringCommand[cmd])
             else:
                 print("Red is not found!\n\n")
             print("__________")
         # Display the result
         if DISPLAY:
-            imSF = cv2.resize(frame, (240, 240))                    # Resize image for displaying
+            imSF = cv2.resize(frame, (320, 240))                    # Resize image for displaying
             cv2.imshow("Frame", imSF)                              # Show image
-            imSR = cv2.resize(res, (240, 240))                    # Resize image for displaying
+            imSR = cv2.resize(res, (320, 240))                    # Resize image for displaying
             cv2.imshow("Centroid", imSR)                              # Show image
             # cv2.imshow('frame', frame)
             # cv2.imshow("res_center",res)
