@@ -37,7 +37,7 @@ import math
 VERBOSE=True
 DISPLAY=True
 
-stringCommand = [ "Ahead", "Right", "Left", "Up", "Down"]
+stringCommand = [ "Ahead", "Right", "Left", "Up", "Down", "ERR"]
 
 # _____________________________________________________________________
 # "Callback class"
