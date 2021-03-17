@@ -186,10 +186,12 @@ class image_feature:
         # Adapted from 
         # https://stackoverflow.com/questions/54425093/
         # /how-can-i-find-the-center-of-the-pattern-and-the-distribution-of-a-color-around)
+        # Find all blobs
         im2, contours, hierarchy = cv2.findContours(res, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         areas = []
         centersX = []
         centersY = []
+        # calculate the center of each region and do a weighted average based on the contour area to get centroid
         for cnt in contours:
             areas.append(cv2.contourArea(cnt))
             M = cv2.moments(cnt)
