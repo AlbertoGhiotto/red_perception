@@ -151,9 +151,9 @@ class image_feature:
         # Display the result
         if DISPLAY:
             imSF = cv2.resize(frame, (320, 240))                    # Resize image for displaying
-            cv2.imshow("Frame", imSF)                              # Show image
+            cv2.imshow("Camera frame", imSF)                              # Show image
             imSR = cv2.resize(res, (320, 240))                    # Resize image for displaying
-            cv2.imshow("Centroid", imSR)                              # Show image
+            cv2.imshow("Red centroid", imSR)                              # Show image
             # cv2.imshow('frame', frame)
             # cv2.imshow("res_center",res)
             cv2.waitKey(2)
